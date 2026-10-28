@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevNotes - Bloco de Notas Web</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <h1>📝 DevNotes</h1>
+      <p>Bloco de notas rápido salvo no seu navegador via LocalStorage</p>
+    </header>
+
+    <main class="main-content">
+      <!-- Formulário de Nova Nota -->
+      <section class="card">
+        <h2>Criar Nova Nota</h2>
+        <form id="note-form">
+          <div class="form-group">
+            <input type="text" id="title" placeholder="Título da nota" required>
+          </div>
+          <div class="form-group">
+            <select id="category">
+              <option value="Geral">📌 Geral</option>
+              <option value="Estudos">📚 Estudos</option>
+              <option value="Projetos">💻 Projetos</option>
+              <option value="Ideias">💡 Ideias</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <textarea id="content" rows="4" placeholder="Escreva o conteúdo da nota..."></textarea>
+          </div>
+          <button type="submit" id="save-btn">Salvar Nota</button>
+        </form>
+      </section>
+
+      <!-- Lista de Notas -->
+      <section class="card">
+        <h2>Minhas Notas</h2>
+        <div id="notes-list" class="notes-grid">
+          <!-- As notas serão inseridas via JavaScript -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
