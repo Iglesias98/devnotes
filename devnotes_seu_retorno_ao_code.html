@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevNotes - Seu Retorno ao Code</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuração do Tailwind para aceitar dark mode via classe
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & JetBrains Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300 flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-sky-500/20">
+                <i class="fa-solid me-0 fa-code"></i>
+            </div>
+            <div>
+                <h1 class="text-lg lg:text-xl font-bold tracking-tight bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+                    DevNotes
+                </h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Seu Retorno ao Code</p>
+            </div>
+        </div>
+
+        <!-- Barra de Busca -->
+        <div class="flex-1 max-w-md mx-2 sm:mx-6">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Pesquisar notas (título, conteúdo ou tags)..." 
+                       class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition">
+            </div>
+        </div>
+
+        <!-- Ações do Header -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Botão Didática Modal -->
+            <button id="openGuideBtn" title="Guia de Conceitos JS" class="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs sm:text-sm font-semibold flex items-center gap-2 border border-indigo-200 dark:border-indigo-800 transition">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span class="hidden md:inline">Conceitos Revisitados</span>
+            </button>
+
+            <!-- Toggle Dark Mode -->
+            <button id="themeToggle" title="Alternar Tema" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition border border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+                <i class="fa-solid fa-sun text-lg hidden dark:block text-amber-400"></i>
+            </button>
+
+            <!-- Nova Nota Button -->
+            <button id="btnNewNote" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-sky-600/30 flex items-center gap-2 transition">
+                <i class="fa-solid fa-plus"></i>
+                <span class="hidden sm:inline">Nova Nota</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Layout Principal com Sidebar + Grid -->
+    <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6">
+        
+        <!-- Sidebar de Filtros e Stats -->
+        <aside class="w-full md:w-64 flex-shrink-0 flex flex-col gap-6">
+            <!-- Stats Widget -->
+            <div class="bg-white dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Estatísticas</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                        <span class="block text-2xl font-bold text-sky-500" id="statTotal">0</span>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">Total Notas</span>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                        <span class="block text-2xl font-bold text-indigo-500" id="statPinned">0</span>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">Fixadas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categorias / Tags -->
+            <div class="bg-white dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-1">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Categorias</h3>
+                <nav class="space-y-1" id="categoryList">
+                    <!-- Categorias renderizadas dinamicamente pelo JS -->
+                </nav>
+
+                <hr class="my-4 border-slate-200 dark:border-slate-800">
+
+                <!-- Exportação & Importação -->
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Backup / Exportar</h3>
+                <div class="flex flex-col gap-2">
+                    <button id="btnExportJSON" class="w-full px-3 py-2 text-left rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-file-code text-amber-500"></i> Exportar tudo (.JSON)
+                    </button>
+                    <button id="btnExportMD" class="w-full px-3 py-2 text-left rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-file-lines text-sky-500"></i> Exportar tudo (.MD)
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Áreas de Conteúdo (Notas) -->
+        <main class="flex-1 flex flex-col gap-6">
+            <!-- Seção Fixadas (Mostra apenas se houver notas fixadas) -->
+            <section id="pinnedSection" class="hidden">
+                <div class="flex items-center gap-2 mb-3 text-sm font-semibold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
+                    <i class="fa-solid fa-thumbtack"></i>
+                    <h2>Notas Fixadas</h2>
+                </div>
+                <div id="pinnedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Cards renderizados via JS -->
+                </div>
+            </section>
+
+            <!-- Seção Todas as Notas -->
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider" id="mainSectionTitle">
+                        Todas as Notas
+                    </h2>
+                    <select id="sortBy" class="bg-transparent text-xs font-medium text-slate-500 dark:text-slate-400 focus:outline-none cursor-pointer">
+                        <option value="newest" class="dark:bg-slate-800">Mais recentes</option>
+                        <option value="oldest" class="dark:bg-slate-800">Mais antigas</option>
+                        <option value="alphabetical" class="dark:bg-slate-800">A-Z (Título)</option>
+                    </select>
+                </div>
+
+                <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Cards renderizados via JS -->
+                </div>
+
+                <!-- Empty State (Se não tiver notas) -->
+                <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-2xl mb-4">
+                        <i class="fa-regular fa-note-sticky"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-1">Nenhuma nota encontrada</h3>
+                    <p class="text-xs text-slate-400 max-w-xs mb-4">Crie sua primeira anotação para praticar ou redefina os filtros selecionados.</p>
+                    <button id="btnEmptyCreate" class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-semibold hover:bg-sky-500 transition">
+                        Criar Nota
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Form (Criar / Editar Nota) -->
+    <div id="noteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
+                <h3 id="modalTitle" class="text-base font-bold text-slate-800 dark:text-slate-100">Criar Nova Nota</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="noteForm" class="p-6 space-y-4">
+                <input type="hidden" id="noteId">
+
+                <!-- Título -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Título</label>
+                    <input type="text" id="inputTitle" required placeholder="Ex: Lógica de Iteradores em Python"
+                           class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50">
+                </div>
+
+                <!-- Categoria & Cor (Grid 2 colunas) -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Categoria</label>
+                        <select id="selectCategory" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50">
+                            <option value="Python">Python</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="Estudos">Estudos</option>
+                            <option value="Ideias">Ideias</option>
+                            <option value="A Fazer">A Fazer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Cor do Destaque</label>
+                        <div class="flex items-center gap-2 pt-1" id="colorPickerContainer">
+                            <!-- Cores renderizadas dinamicamente -->
+                        </div>
+                        <input type="hidden" id="inputColor" value="sky">
+                    </div>
+                </div>
+
+                <!-- Conteúdo -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Conteúdo</label>
+                        <span class="text-[10px] text-slate-400">Aceita formatação simples (**negrito**, `código`)</span>
+                    </div>
+                    <textarea id="inputContent" rows="5" required placeholder="Anotações da aula, trechos de código, comandos git..."
+                              class="w-full px-3 py-2 text-sm font-mono bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/50 resize-none"></textarea>
+                </div>
+
+                <!-- Checkbox Fixar -->
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="checkPinned" class="w-4 h-4 text-sky-600 rounded border-slate-300 dark:border-slate-700 focus:ring-sky-500">
+                    <label for="checkPinned" class="text-xs text-slate-600 dark:text-slate-300 font-medium cursor-pointer select-none">
+                        Fixar esta nota no topo
+                    </label>
+                </div>
+
+                <!-- Botoes de Ação Modal -->
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" id="btnCancelModal" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-sky-600/30 transition">
+                        Salvar Nota
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Guia Didático (Conceitos Revisitados) -->
+    <div id="guideModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80">
+                <div class="flex items-center gap-2 text-indigo-500 font-bold text-base">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <h3>Conceitos Web & JS Revisitados neste App</h3>
+                </div>
+                <button id="closeGuideBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div class="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/50">
+                    <h4 class="font-bold text-sky-700 dark:text-sky-300 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-database"></i> 1. LocalStorage & Persistência de Dados
+                    </h4>
+                    <p>O `localStorage` permite guardar dados do tipo chave-valor no navegador do usuário. Convertemos nossos objetos em Strings utilizando <code>JSON.stringify()</code> e depois revertemos para código com <code>JSON.parse()</code>.</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/50">
+                    <h4 class="font-bold text-indigo-700 dark:text-indigo-300 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> 2. Manipulação Avançada do DOM (Document Object Model)
+                    </h4>
+                    <p>Ao invés de recriar a página toda, selecionamos elementos usando <code>document.getElementById()</code> ou <code>querySelector()</code> e alteramos seu conteúdo dinamicamente via <code>innerHTML</code> ou <code>classList</code>.</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50">
+                    <h4 class="font-bold text-emerald-700 dark:text-emerald-300 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-filter"></i> 3. Métodos Funcionais de Array (filter, map, sort)
+                    </h4>
+                    <p>Assim como os <i>list comprehensions</i> do Python (ex: <code>[x for x in list if condition]</code>), em JavaScript usamos métodos funcionais encadeados como <code>.filter()</code> para filtrar notas por busca/tag e <code>.sort()</code> para ordenação por data.</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                    <h4 class="font-bold text-amber-700 dark:text-amber-300 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-file-export"></i> 4. Blobs & Downloads (Exportação)
+                    </h4>
+                    <p>Para gerar arquivos JSON ou Markdown para download sem precisar de servidor/backend, usamos a API <code>Blob</code> nativa do browser e disparamos um clique sintético via link <code>&lt;a&gt;</code> virtual.</p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-right">
+                <button id="btnGuideGotIt" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow transition">
+                    Entendi, bora programar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Principal JavaScript Didático e Moderno -->
+    <script>
+        /**
+         * =================================================================
+         * DEVNOTES - LÓGICA DE APLICAÇÃO (VANILLA JAVASCRIPT ES6+)
+         * =================================================================
+         * Este script utiliza recursos modernos de JS como:
+         * - Arrow Functions () => {}
+         * - Template Literals `${var}`
+         * - Destructuring Assignment
+         * - Array Methods (.filter, .map, .find, .sort)
+         * - Event Listeners
+         * - LocalStorage API
+         */
+
+        // -----------------------------------------------------------------
+        // 1. ESTADO DA APLICAÇÃO (STATE MANAGEMENT)
+        // -----------------------------------------------------------------
+        // Armazenamos a lista de notas e os filtros ativos em memória.
+        let notes = [];
+        let currentCategory = 'Todas';
+        let searchQuery = '';
+        let sortBy = 'newest';
+        let selectedColor = 'sky';
+
+        // Mapeamento das opções de cores (Tailwind classes)
+        const COLOR_OPTIONS = [
+            { id: 'sky', bg: 'bg-sky-500', border: 'border-sky-500' },
+            { id: 'indigo', bg: 'bg-indigo-500', border: 'border-indigo-500' },
+            { id: 'emerald', bg: 'bg-emerald-500', border: 'border-emerald-500' },
+            { id: 'amber', bg: 'bg-amber-500', border: 'border-amber-500' },
+            { id: 'rose', bg: 'bg-rose-500', border: 'border-rose-500' }
+        ];
+
+        // Categorias pré-definidas
+        const CATEGORIES = ['Todas', 'Python', 'JavaScript', 'Estudos', 'Ideias', 'A Fazer'];
+
+        // -----------------------------------------------------------------
+        // 2. ELEMENTOS DO DOM (DOM SELECTORS)
+        // -----------------------------------------------------------------
+        const notesGrid = document.getElementById('notesGrid');
+        const pinnedGrid = document.getElementById('pinnedGrid');
+        const pinnedSection = document.getElementById('pinnedSection');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const categoryList = document.getElementById('categoryList');
+        const sortBySelect = document.getElementById('sortBy');
+        
+        // Modal & Form Selectors
+        const noteModal = document.getElementById('noteModal');
+        const noteForm = document.getElementById('noteForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const noteIdInput = document.getElementById('noteId');
+        const inputTitle = document.getElementById('inputTitle');
+        const selectCategory = document.getElementById('selectCategory');
+        const inputContent = document.getElementById('inputContent');
+        const checkPinned = document.getElementById('checkPinned');
+        const inputColor = document.getElementById('inputColor');
+        const colorPickerContainer = document.getElementById('colorPickerContainer');
+        
+        // Buttons
+        const btnNewNote = document.getElementById('btnNewNote');
+        const btnEmptyCreate = document.getElementById('btnEmptyCreate');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const btnCancelModal = document.getElementById('btnCancelModal');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Guide Modal Selectors
+        const guideModal = document.getElementById('guideModal');
+        const openGuideBtn = document.getElementById('openGuideBtn');
+        const closeGuideBtn = document.getElementById('closeGuideBtn');
+        const btnGuideGotIt = document.getElementById('btnGuideGotIt');
+
+        // Stats Elements
+        const statTotal = document.getElementById('statTotal');
+        const statPinned = document.getElementById('statPinned');
+
+        // -----------------------------------------------------------------
+        // 3. SEED INITIAL DATA (Se o localStorage estiver vazio)
+        // -----------------------------------------------------------------
+        const initialNotes = [
+            {
+                id: '1',
+                title: 'Boas-vindas de volta ao DevNotes!',
+                category: 'Estudos',
+                content: 'Esta é uma nota de exemplo. Você pode **editar**, **fixar** ou **excluir**. Aproveite para explorar o código!',
+                pinned: true,
+                color: 'sky',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: '2',
+                title: 'List Comprehensions em Python',
+                category: 'Python',
+                content: 'Sintaxe rápida: `quadrados = [x**2 for x in range(10)]`. Muito mais limpo que utilizar loops tradicionais!',
+                pinned: false,
+                color: 'emerald',
+                createdAt: new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+                id: '3',
+                title: 'Arrow Functions em JavaScript',
+                category: 'JavaScript',
+                content: 'Exemplo: `const somar = (a, b) => a + b;`\nPreserva o escopo do `this` e reduz verborragia no código.',
+                pinned: false,
+                color: 'amber',
+                createdAt: new Date(Date.now() - 7200000).toISOString()
+            }
+        ];
+
+        // -----------------------------------------------------------------
+        // 4. PERSISTÊNCIA EM LOCALSTORAGE
+        // -----------------------------------------------------------------
+        const loadNotes = () => {
+            const saved = localStorage.getItem('devnotes_data');
+            if (saved) {
+                try {
+                    notes = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Erro ao ler LocalStorage", e);
+                    notes = initialNotes;
+                }
+            } else {
+                notes = initialNotes;
+                saveNotes();
+            }
+        };
+
+        const saveNotes = () => {
+            localStorage.setItem('devnotes_data', JSON.stringify(notes));
+            render();
+        };
+
+        // -----------------------------------------------------------------
+        // 5. RENDERIZAÇÃO DA INTERFACE (UI RENDER)
+        // -----------------------------------------------------------------
+        const render = () => {
+            // A. Filtragem dos dados (Search Query + Categoria)
+            let filtered = notes.filter(note => {
+                const matchesCategory = currentCategory === 'Todas' || note.category === currentCategory;
+                const query = searchQuery.toLowerCase();
+                const matchesSearch = note.title.toLowerCase().includes(query) || 
+                                     note.content.toLowerCase().includes(query) ||
+                                     note.category.toLowerCase().includes(query);
+                return matchesCategory && matchesSearch;
+            });
+
+            // B. Ordenação
+            filtered.sort((a, b) => {
+                if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+                if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+                if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
+            });
+
+            // C. Separar em Pinned e Normal
+            const pinnedNotes = filtered.filter(n => n.pinned);
+            const normalNotes = filtered.filter(n => !n.pinned);
+
+            // D. Renderizar Seção Fixadas
+            if (pinnedNotes.length > 0) {
+                pinnedSection.classList.remove('hidden');
+                pinnedGrid.innerHTML = pinnedNotes.map(createNoteCardHTML).join('');
+            } else {
+                pinnedSection.classList.add('hidden');
+                pinnedGrid.innerHTML = '';
+            }
+
+            // E. Renderizar Seção Normal
+            notesGrid.innerHTML = normalNotes.map(createNoteCardHTML).join('');
+
+            // F. Tratar Empty State
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            // G. Atualizar Contadores / Estatísticas
+            statTotal.textContent = notes.length;
+            statPinned.textContent = notes.filter(n => n.pinned).length;
+
+            // H. Re-renderizar lista de categorias ativas
+            renderCategories();
+        };
+
+        // Função auxiliar para gerar a estrutura de HTML do Card de Nota
+        const createNoteCardHTML = (note) => {
+            // Formatação de data amigável
+            const dateStr = new Date(note.createdAt).toLocaleDateString('pt-BR', {
+                day: '2-digit', month: 'short'
+            });
+
+            // Parser simples para **negrito** e `código`
+            let formattedContent = note.content
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") // Escapar HTML
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900 dark:text-slate-100">$1</strong>')
+                .replace(/`(.*?)`/g, '<code class="bg-slate-200 dark:bg-slate-700/60 px-1 py-0.5 rounded text-xs text-sky-600 dark:text-sky-300">$1</code>')
+                .replace(/\n/g, '<br>');
+
+            // Mapeamento visual das cores para a borda lateral do card
+            const borderColors = {
+                sky: 'border-l-sky-500',
+                indigo: 'border-l-indigo-500',
+                emerald: 'border-l-emerald-500',
+                amber: 'border-l-amber-500',
+                rose: 'border-l-rose-500'
+            };
+
+            const borderClass = borderColors[note.color] || 'border-l-sky-500';
+
+            return `
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/60 shadow-sm hover:shadow-md transition border-l-4 ${borderClass} flex flex-col justify-between group">
+                    <div>
+                        <!-- Header do Card -->
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <span class="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                ${note.category}
+                            </span>
+                            <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
+                                <button onclick="togglePin('${note.id}')" title="${note.pinned ? 'Desafixar' : 'Fixar'}" 
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">
+                                    <i class="fa-solid fa-thumbtack ${note.pinned ? 'text-amber-500' : ''}"></i>
+                                </button>
+                                <button onclick="openEditModal('${note.id}')" title="Editar" 
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteNote('${note.id}')" title="Excluir" 
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Título e Conteúdo -->
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm mb-2 line-clamp-1">${note.title}</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed break-words mb-4 line-clamp-6">${formattedContent}</p>
+                    </div>
+
+                    <!-- Footer do Card -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/40 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>${dateStr}</span>
+                        <i class="fa-solid fa-circle text-[6px] text-${note.color}-500"></i>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Renderizar Lista de Categorias na Sidebar
+        const renderCategories = () => {
+            categoryList.innerHTML = CATEGORIES.map(cat => {
+                const count = cat === 'Todas' ? notes.length : notes.filter(n => n.category === cat).length;
+                const isActive = currentCategory === cat;
+                return `
+                    <button onclick="filterCategory('${cat}')" 
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                                isActive 
+                                ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400' 
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/40'
+                            }">
+                        <span>${cat}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-sky-200/50 dark:bg-sky-800/50' : 'bg-slate-100 dark:bg-slate-800'}">${count}</span>
+                    </button>
+                `;
+            }).join('');
+        };
+
+        // -----------------------------------------------------------------
+        // 6. AÇÕES & MANIPULAÇÃO DE NOTAS (CRUD)
+        // -----------------------------------------------------------------
+        const saveNoteHandler = (e) => {
+            e.preventDefault();
+            const id = noteIdInput.value;
+            const title = inputTitle.value.trim();
+            const category = selectCategory.value;
+            const content = inputContent.value.trim();
+            const pinned = checkPinned.checked;
+            const color = inputColor.value;
+
+            if (!title || !content) return;
+
+            if (id) {
+                // Atualizar Nota Existente
+                notes = notes.map(n => n.id === id ? { ...n, title, category, content, pinned, color } : n);
+            } else {
+                // Criar Nova Nota
+                const newNote = {
+                    id: Date.now().toString(),
+                    title,
+                    category,
+                    content,
+                    pinned,
+                    color,
+                    createdAt: new Date().toISOString()
+                };
+                notes.unshift(newNote);
+            }
+
+            saveNotes();
+            closeModal();
+        };
+
+        const deleteNote = (id) => {
+            if (confirm("Tem certeza que deseja excluir esta nota?")) {
+                notes = notes.filter(n => n.id !== id);
+                saveNotes();
+            }
+        };
+
+        const togglePin = (id) => {
+            notes = notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n);
+            saveNotes();
+        };
+
+        const filterCategory = (cat) => {
+            currentCategory = cat;
+            render();
+        };
+
+        // -----------------------------------------------------------------
+        // 7. GERENCIAMENTO DE MODAL & COR
+        // -----------------------------------------------------------------
+        const openModal = () => {
+            noteForm.reset();
+            noteIdInput.value = '';
+            modalTitle.textContent = 'Criar Nova Nota';
+            selectColor('sky');
+            noteModal.classList.remove('opacity-0', 'pointer-events-none');
+            noteModal.firstElementChild.classList.remove('scale-95');
+            noteModal.firstElementChild.classList.add('scale-100');
+            inputTitle.focus();
+        };
+
+        const openEditModal = (id) => {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            noteIdInput.value = note.id;
+            inputTitle.value = note.title;
+            selectCategory.value = note.category;
+            inputContent.value = note.content;
+            checkPinned.checked = note.pinned;
+            selectColor(note.color || 'sky');
+            modalTitle.textContent = 'Editar Nota';
+
+            noteModal.classList.remove('opacity-0', 'pointer-events-none');
+            noteModal.firstElementChild.classList.remove('scale-95');
+            noteModal.firstElementChild.classList.add('scale-100');
+        };
+
+        const closeModal = () => {
+            noteModal.classList.add('opacity-0', 'pointer-events-none');
+            noteModal.firstElementChild.classList.remove('scale-100');
+            noteModal.firstElementChild.classList.add('scale-95');
+        };
+
+        // Renderizar Seletor de Cores no Modal
+        const renderColorPicker = () => {
+            colorPickerContainer.innerHTML = COLOR_OPTIONS.map(c => `
+                <button type="button" onclick="selectColor('${c.id}')" 
+                        class="w-6 h-6 rounded-full ${c.bg} transition-transform flex items-center justify-center text-white text-[10px]"
+                        id="color-btn-${c.id}">
+                </button>
+            `).join('');
+        };
+
+        const selectColor = (colorId) => {
+            selectedColor = colorId;
+            inputColor.value = colorId;
+
+            // Atualiza indicadores visuais do botão de cor
+            COLOR_OPTIONS.forEach(c => {
+                const btn = document.getElementById(`color-btn-${c.id}`);
+                if (btn) {
+                    if (c.id === colorId) {
+                        btn.classList.add('ring-2', 'ring-offset-2', 'ring-sky-500', 'scale-110');
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    } else {
+                        btn.classList.remove('ring-2', 'ring-offset-2', 'ring-sky-500', 'scale-110');
+                        btn.innerHTML = '';
+                    }
+                }
+            });
+        };
+
+        // -----------------------------------------------------------------
+        // 8. EXPORTAÇÃO DE DADOS (JSON & MARKDOWN)
+        // -----------------------------------------------------------------
+        const downloadFile = (content, fileName, contentType) => {
+            const a = document.createElement("a");
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+
+        const exportJSON = () => {
+            const jsonString = JSON.stringify(notes, null, 2);
+            downloadFile(jsonString, `DevNotes_Backup_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
+        };
+
+        const exportMarkdown = () => {
+            let mdContent = `# DevNotes - Backup de Anotações\n*Exportado em: ${new Date().toLocaleString('pt-BR')}*\n\n---\n\n`;
+            notes.forEach(note => {
+                mdContent += `## ${note.title}\n`;
+                mdContent += `- **Categoria:** ${note.category}\n`;
+                mdContent += `- **Data:** ${new Date(note.createdAt).toLocaleDateString('pt-BR')}\n`;
+                mdContent += `- **Fixado:** ${note.pinned ? 'Sim' : 'Não'}\n\n`;
+                mdContent += `${note.content}\n\n---\n\n`;
+            });
+            downloadFile(mdContent, `DevNotes_Export_${new Date().toISOString().slice(0,10)}.md`, 'text/markdown');
+        };
+
+        // -----------------------------------------------------------------
+        // 9. EVENT LISTENERS & INICIALIZAÇÃO
+        // -----------------------------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+            loadNotes();
+            renderColorPicker();
+
+            // Form Submit
+            noteForm.addEventListener('submit', saveNoteHandler);
+
+            // Modal Open/Close
+            btnNewNote.addEventListener('click', openModal);
+            btnEmptyCreate.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            btnCancelModal.addEventListener('click', closeModal);
+
+            // Fechar modal clicando fora (backdrop)
+            noteModal.addEventListener('click', (e) => {
+                if (e.target === noteModal) closeModal();
+            });
+
+            // Busca em tempo real
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                render();
+            });
+
+            // Ordenação
+            sortBySelect.addEventListener('change', (e) => {
+                sortBy = e.target.value;
+                render();
+            });
+
+            // Dark Mode Toggle
+            themeToggle.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+
+            // Exportações
+            document.getElementById('btnExportJSON').addEventListener('click', exportJSON);
+            document.getElementById('btnExportMD').addEventListener('click', exportMarkdown);
+
+            // Modal Guia Didático
+            openGuideBtn.addEventListener('click', () => {
+                guideModal.classList.remove('opacity-0', 'pointer-events-none');
+            });
+            const closeGuide = () => {
+                guideModal.classList.add('opacity-0', 'pointer-events-none');
+            };
+            closeGuideBtn.addEventListener('click', closeGuide);
+            btnGuideGotIt.addEventListener('click', closeGuide);
+            guideModal.addEventListener('click', (e) => {
+                if (e.target === guideModal) closeGuide();
+            });
+        });
+    </script>
+</body>
+</html>
